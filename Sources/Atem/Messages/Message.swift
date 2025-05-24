@@ -28,7 +28,13 @@ public enum Message {
 
 		init(string: StaticString) {
 			assert(string.utf8CodeUnitCount == 4)
-			number = string.utf8Start.withMemoryRebound(to: UInt32.self, capacity: 1) { $0.pointee.byteSwapped }
+
+            // -------------------------------------
+            // [CHRIS] Fix found here:
+            // https://github.com/dhf/Swift-Atem/commit/20990385f83cad4d985b824a6160e174c1a340bb
+            // -------------------------------------
+            //number = string.utf8Start.withMemoryRebound(to: UInt32.self, capacity: 1) { $0.pointee.byteSwapped }
+            number = UnsafeRawPointer(string.utf8Start).bindMemory(to: UInt32.self, capacity: 1).pointee.byteSwapped
 		}
 
 		public var description: String {

@@ -5,10 +5,6 @@
 //  Created by Damiaan on 19/04/2020.
 //
 
-public enum AtemSize: UInt8 {
-	case oneME = 0, twoME = 1
-}
-
 import Foundation
 
 extension Message.Config {
@@ -18,7 +14,7 @@ extension Message.Config {
 		public static let title = Message.Title(string: "_ver")
 		static let majorPosition = 0..<2
 		static let minorPosition = 2..<4
-		let minor, major: UInt16
+		public let minor, major: UInt16
 
 		public init(with bytes: ArraySlice<UInt8>) {
 			major = UInt16(from: bytes[ProtocolVersion.majorPosition.advanced(by: bytes.startIndex)])
@@ -44,9 +40,9 @@ extension Message.Config {
 		static let modelPosition = 40
 
 		/// The name of the product
-		let name: String
+		public let name: String
 		/// The model of the product
-		let model: Model
+		public let model: Model
 
 		public init(with bytes: ArraySlice<UInt8>) throws {
 			// Stores the string constructed from the first non-zero bytes

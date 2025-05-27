@@ -1,11 +1,11 @@
 <p align="center">
-    <img src="https://img.shields.io/badge/swift-5.1-orange.svg" alt="Swift 5.1">
+    <img src="https://img.shields.io/badge/swift-5.5-orange.svg" alt="Swift 5.5">
     <img src="https://img.shields.io/badge/Platform-macOS%20%7C%20Linux-brightgreen.svg" alt="Platforms: macOS & Linux">
 </p>
 
 # Atem network protocol implementation
 
-Implementation of BlackMagicDesign's ATEM communication protocol in Swift. It is written on top of Apple's  networking library [NIO](https://github.com/apple/swift-nio) and implements both sides of the protocol: the control panel and the switcher side. This means that you can not only use it to control atem switchers but also to connect to your control panels without the need for a switcher. Opening a whole new world of applications for the Atem control panels. An example can be found at [Atem-Simulator](https://github.com/Dev1an/Atem-Simulator)
+Implementation of BlackMagicDesign's ATEM communication protocol in Swift. It is written on top of Apple's  networking library [NIO](https://github.com/apple/swift-nio) and implements both sides of the protocol: the control panel and the switcher side. This means that you can not only use it to control physical atem switchers but you can also use it to connect your control panels to a self made software switcher without the need for an actual physical switcher. Opening a whole new world of applications for the Atem control panels. An example can be found at [Atem-Simulator](https://github.com/Dev1an/Atem-Simulator)
 
 Starting from version 1.0.0 this package uses Swift 5 and NIO2.
 
@@ -28,7 +28,7 @@ When starting a new project: create a Swift package via [SPM](https://swift.org/
 Then add this library to the [package description](https://github.com/apple/swift-package-manager/blob/master/Documentation/PackageDescriptionV4.md#dependencies)'s dependencies
 
 ```swift
-.package(url: "https://github.com/Dev1an/Swift-Atem", from: "1.0.0")
+.package(url: "https://github.com/Dev1an/Swift-Atem", from: .init(2, 0, 0, prereleaseIdentifiers: ["alpha"]))
 ```
 
 And resolve this new dependency
@@ -48,14 +48,14 @@ You are now ready to create atem controllers and switchers 😎 !
 
 ## Usage
 
-After looking at the following examples, study the [API reference](https://dev1an.github.io/Swift-Atem/) for more details.
+This library uses Apple's DocC to compile beatiful documentation. Make sure to check it out inside Xcode. If you prefer online docs you can also consult the [API Reference on Netlify](https://swift-atem.netlify.app/documentation/atem)![XcodeDocs](./Sources/Atem/Documentation.docc/Resources/XcodeDocs.png)
 
 ### Controller
 
 This example shows how to create a controller that connects to a swicther at ip address 10.1.0.67 and print a message whenever the preview bus changes.
 
 ```swift
-try Controller(ipAddress: "10.1.0.67") { connection in
+try Controller(forSwitcherAt: "10.1.0.67") { connection in
   connection.when{ (change: PreviewBusChanged) in
     print(change) // prints: 'Preview bus changed to input(x)'
   }
@@ -67,7 +67,7 @@ try Controller(ipAddress: "10.1.0.67") { connection in
 To send a message to the switcher use the `send(...)` method like this:
 
 ```swift
-controller.send(message: ChangeTransitionPosition(to: 5000))
+controller.send(message: Do.ChangeTransitionPosition(to: 5000) )
 ```
 
 ### Switcher
@@ -78,38 +78,38 @@ This snippet is also included in a seperate SPM target "Simulator" (./Sources/Si
 
 ```swift
 let switcher = Switcher { controllers in
-  controllers.when { (change: ChangePreviewBus, _) in
-    controllers.send(
-      PreviewBusChanged(
+	controllers.when { (change: Do.ChangePreviewBus, _) in
+		controllers.send(
+      Did.ChangePreviewBus(
         to: change.previewBus,
         mixEffect: change.mixEffect
       )
     )
   }
-  controllers.when{ (change: ChangeProgramBus, _) in
-    controllers.send(
-      ProgramBusChanged(
+	controllers.when{ (change: Do.ChangeProgramBus, _) in
+		controllers.send(
+      Did.ChangeProgramBus(
         to: change.programBus,
         mixEffect: change.mixEffect
       )
     )
-  }
-  controllers.when { (change: ChangeTransitionPosition, _) in
-    controllers.send(
-      TransitionPositionChanged(
-        to: change.position,
-        remainingFrames: 250 - UInt8(change.position/40),
-        mixEffect: change.mixEffect
-      )
-    )
-  }
-  controllers.when { (change: ChangeAuxiliaryOutput, _) in
-    controllers.send(
-      AuxiliaryOutputChanged(
+	}
+	controllers.when { (change: Do.ChangeTransitionPosition, _) in
+		controllers.send(
+			Did.ChangeTransitionPosition(
+                to: change.position,
+                remainingFrames: 250 - UInt8(change.position/40),
+                mixEffect: change.mixEffect
+            )
+        )
+    }
+	controllers.when { (change: Do.ChangeAuxiliaryOutput, _) in
+		controllers.send(
+      Did.ChangeAuxiliaryOutput(
         source: change.source,
         output: change.output
       )
     )
-  }
+	}
 }
 ```

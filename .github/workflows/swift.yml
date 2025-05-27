@@ -2,18 +2,32 @@ name: Swift
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, development ]
   pull_request:
-    branches: [ master ]
+    branches: [ master, development ]
 
 jobs:
   build:
 
-    runs-on: macos-latest
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+        include:
+          - os: macos-latest
+            TEST: "swift test -v"
+          - os: ubuntu-latest
+            TEST: "swift test -v --enable-test-discovery"
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: swift build -v
-    - name: Run tests
-      run: swift test -v
+     - uses: dev1an/setup-swift@swift-5.5
+       with:
+         swift-version: '5.5'
+     - uses: actions/checkout@v2
+     - name: Swift version info
+       run: swift --version
+     - name: Build
+       run: swift build -v
+     - name: Run tests
+       run: ${{matrix.TEST}}

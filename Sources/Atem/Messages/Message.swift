@@ -8,6 +8,14 @@
 
 import Foundation
 
+/// A shortcut to ``Message/Do``
+public typealias Do  = Message.Do
+/// A shortcut to ``Message/Did``
+public typealias Did = Message.Did
+/// A shortcut to ``Message/Config``
+public typealias Config = Message.Config
+
+/// A namespace for messages that are sent between ``Controller``s and ``Switcher``s
 public enum Message {
 	/// An ASCII String of exactly 4 characters. A list of available titles can be found in [Skarhoj's protocol description](http://skaarhoj.com/fileadmin/BMDPROTOCOL.html) under the column "CMD".
 	public struct Title: CustomStringConvertible {
@@ -15,14 +23,24 @@ public enum Message {
 		/// Slice `0 ..< 4`
 		static let position = 0 ..< 4
 
-		/// A `Swift.String` representation of the title
-		public let description: String
 		/// A `UInt32` representation of the title
 		let number: UInt32
 
-		init(string: String) {
-			description = string
-			number = Array(string.utf8).withUnsafeBytes{ $0.load(as: UInt32.self).byteSwapped }
+		init(string: StaticString) {
+			assert(string.utf8CodeUnitCount == 4)
+
+            // -------------------------------------
+            // [CHRIS] Fix found here:
+            // https://github.com/dhf/Swift-Atem/commit/20990385f83cad4d985b824a6160e174c1a340bb
+            // -------------------------------------
+            //number = string.utf8Start.withMemoryRebound(to: UInt32.self, capacity: 1) { $0.pointee.byteSwapped }
+            number = UnsafeRawPointer(string.utf8Start).bindMemory(to: UInt32.self, capacity: 1).pointee.byteSwapped
+		}
+
+		public var description: String {
+			withUnsafeBytes(of: number.byteSwapped) { pointer in
+				String(bytes: pointer, encoding: .utf8)!
+			}
 		}
 	}
 
@@ -66,10 +84,6 @@ public enum Message {
 	/// Namespace for configuration messages
 	public enum Config {}
 }
-
-public typealias Do  = Message.Do
-public typealias Did = Message.Did
-public typealias Config = Message.Config
 
 /// A message that can be constructed from a sequence of bytes (`ArraySlice<UInt8>`)
 public protocol DeserializableMessage: CustomDebugStringConvertible {

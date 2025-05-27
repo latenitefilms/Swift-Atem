@@ -14,8 +14,9 @@ extension UInt8 {
 
 extension FixedWidthInteger {
 	init(from slice: ArraySlice<UInt8>) {
-		self.init(bigEndian: slice.withUnsafeBufferPointer{
-			$0.baseAddress!.withMemoryRebound(to: Self.self, capacity: 1) {$0.pointee}
+        self.init(bigEndian: slice.withUnsafeBufferPointer {
+            let uint = UnsafeRawBufferPointer($0).bindMemory(to: Self.self)
+            return uint.baseAddress!.pointee
 		})
 	}
 

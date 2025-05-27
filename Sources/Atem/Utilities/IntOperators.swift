@@ -13,20 +13,24 @@ extension UInt8 {
 }
 
 extension FixedWidthInteger {
-	init(from slice: ArraySlice<UInt8>) {
-        self.init(bigEndian: slice.withUnsafeBufferPointer {
-            let uint = UnsafeRawBufferPointer($0).bindMemory(to: Self.self)
-            return uint.baseAddress!.pointee
-		})
-	}
+    init(from slice: ArraySlice<UInt8>) {
+        precondition(slice.count == MemoryLayout<Self>.size,
+                     "slice must be exactly \(MemoryLayout<Self>.size) bytes")
+        var value: Self = 0
+        for byte in slice {
+            value = (value << 8) | Self(byte)
+        }
+        self = value
+    }
 
-	var bytes: [UInt8] {
-		let byteCount = bitWidth >> 3
-		return [UInt8](unsafeUninitializedCapacity: byteCount) { (pointer, count) in
-			UnsafeMutableRawPointer(pointer.baseAddress!).bindMemory(to: Self.self, capacity: 1).pointee = bigEndian
-			count = byteCount
-		}
-	}
+    var bytes: [UInt8] {
+        var value = self.bigEndian
+        var result = [UInt8](repeating: 0, count: MemoryLayout<Self>.size)
+        for i in 0..<result.count {
+            result[result.count - 1 - i] = UInt8((value >> (i * 8)) & 0xFF)
+        }
+        return result
+    }
 }
 
 extension ArraySlice {

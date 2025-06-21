@@ -429,7 +429,7 @@ extension VideoSource {
 				buffer[Position.changeMask + 1] = 0 // unknown byte
 				buffer.write(input.bigEndian, at: Position.input.lowerBound)
 				if changeMask.contains(.longName) { buffer.write(longName, to: Position.longName) }
-				if changeMask.contains(.shortName) { buffer.write(shortName, to: Position.shortName) }
+				if changeMask.contains(.shortName) { buffer.write(longName, to: Position.shortName) }
 
 				buffer.write(UInt16(0), at: 30) // TODO may be removed
 				count = 32
